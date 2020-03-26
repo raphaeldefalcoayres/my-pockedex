@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 
-import { Container } from './styles';
+import { Container, Card, List, Name, Img, Col } from './styles';
 import api from '~/services/api';
-import * as Utils from '~/utils';
+import { getItemsList, pad, Paginator } from '~/utils';
+import { ContainerGlobal } from '~/styles/global';
 
 export default function Home() {
   const [page, setPage] = useState(0);
   const [pokemons, setPokemons] = useState([]);
   const [pokemonsData, setPokemonsData] = useState([]);
+  const [pokemonsShow, setPokemonsShow] = useState([]);
 
   async function loadPokemons() {
     if (!localStorage.getItem('pokemons')) {
       new Promise((resolve, reject) => {
-        console.log(resolve);
-        Utils.getItemsList('pokemon?limit=20', [], resolve, reject);
+        getItemsList('pokemon?limit=20', [], resolve, reject);
       }).then(response => {
-        console.log(response);
         setPokemons(response);
         localStorage.setItem('pokemons', JSON.stringify(response));
       });
@@ -24,48 +24,38 @@ export default function Home() {
     setPokemons(JSON.parse(localStorage.getItem('pokemons')));
   }
 
-  function pad(num, size) {
-    const s = `00${num}`;
-    return s.substr(s.length - size);
-  }
-
-  function Paginator(items, per_page) {
-    const offset = (page - 1) * per_page;
-    const paginatedItems = items.slice(offset).slice(0, per_page);
-    const total_pages = Math.ceil(items.length / per_page);
-    return {
-      page,
-      per_page,
-      pre_page: page - 1 ? page - 1 : null,
-      next_page: total_pages > page ? page + 1 : null,
-      total: items.length,
-      total_pages,
-      data: paginatedItems,
-    };
-  }
-
   async function loadPokemonData() {
-    const pokemonsData = await Promise.all(
-      pokemons.map(async pokemon => {
-        const { data } = await api(pokemon.url);
-        console.log(data);
-        return {
-          id: data.id,
-          name: pokemon.name,
-          img: `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${pad(
-            data.id
-          )}.png`,
-          weight: data.weight,
-          height: data.height,
-          base_experience: data.base_experience,
-        };
-      })
-    ).then(result => {
-      // return Paginator(result, 10);
-      return result;
-    });
+    if (!localStorage.getItem('pokemonsData')) {
+      const pokemonsData = await Promise.all(
+        pokemons.map(async pokemon => {
+          const { data } = await api(pokemon.url);
+          const specie = await api(data.species.url);
+          console.log(data, specie);
+          // console.log(data, color);
+          return {
+            id: data.id,
+            name: pokemon.name,
+            img: `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${pad(
+              data.id,
+              3
+            )}.png`,
+            weight: data.weight,
+            height: data.height,
+            base_experience: data.base_experience,
+            color: specie.data.color ? specie.data.color.name : null,
+            evolves_from_species: !specie.data.evolves_from_species
+              ? false
+              : true,
+          };
+        })
+      ).then(result => {
+        // return Paginator(result, 10);
+        return result;
+      });
 
-    localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+      localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
+    }
+    setPokemonsData(JSON.parse(localStorage.getItem('pokemonsData')));
   }
 
   useEffect(() => {
@@ -73,8 +63,44 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (pokemons.length > 0) loadPokemonData();
+    console.log('pokemons', pokemons);
+    if (pokemons && pokemons.length > 0) loadPokemonData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemons]);
 
-  return <h1>Home</h1>;
+  useEffect(() => {
+    console.log('pokemonsData', pokemonsData);
+    if (pokemonsData && pokemonsData.length > 0)
+      setPokemonsShow(Paginator(pokemonsData, 1, 20));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pokemonsData]);
+
+  useEffect(() => {
+    console.log('pokemonsShow', pokemonsShow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pokemonsShow]);
+
+  return (
+    <Container>
+      <ContainerGlobal>
+        <h1>Pokedex</h1>
+
+        <List>
+          {pokemonsShow.data &&
+            pokemonsShow.data.map(pokemon => {
+              return (
+                <Card key={pokemon.id} className={`bg-${pokemon.color}`}>
+                  <Col>
+                    <Name>{pokemon.name}</Name>
+                  </Col>
+                  <Col>
+                    <Img src={pokemon.img} alt="pokemon" />
+                  </Col>
+                </Card>
+              );
+            })}
+        </List>
+      </ContainerGlobal>
+    </Container>
+  );
 }

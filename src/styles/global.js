@@ -29,6 +29,31 @@ export default createGlobalStyle`
     color:#1F2D30;
   }
 
+  .bg-green{
+    background:#49D0B0;
+  }
+  .bg-red{
+    background:#FA6D6B;
+  }
+  .bg-blue{
+    background:#76BEFE;
+  }
+  .bg-yellow{
+    background:#FFD76F;
+  }
+  .bg-brown{
+    background:#544726;
+  }
+  .bg-purple{
+    background:#9A6FFF;
+  }
+  .bg-white{
+    background:#fff;
+    h2 {
+      color:#ccc !important;
+    }
+  }
+
 `;
 
 export const ContainerGlobal = styled.div`
