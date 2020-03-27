@@ -52,7 +52,6 @@ export const getItemsListPaginate = (url, items, page, resolve, reject) => {
 
 export const pad = (num, size) => {
   const s = `000${num}`;
-  console.log('s', num, s);
   return s.substr(s.length - size);
 };
 

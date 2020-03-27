@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
-import { Container, Card, List, Name, Img, Col } from './styles';
+import {
+  Container,
+  Card,
+  List,
+  Name,
+  Img,
+  Col,
+  SubCard,
+  Id,
+  Info,
+  SubTitle,
+} from './styles';
 import api from '~/services/api';
 import { getItemsList, pad, Paginator } from '~/utils';
 import { ContainerGlobal } from '~/styles/global';
@@ -30,8 +41,11 @@ export default function Home() {
         pokemons.map(async pokemon => {
           const { data } = await api(pokemon.url);
           const specie = await api(data.species.url);
-          console.log(data, specie);
+          console.log(data.species);
           // console.log(data, color);
+
+          const evolves_from_species = !!specie.data.evolves_from_species;
+
           return {
             id: data.id,
             name: pokemon.name,
@@ -43,9 +57,9 @@ export default function Home() {
             height: data.height,
             base_experience: data.base_experience,
             color: specie.data.color ? specie.data.color.name : null,
-            evolves_from_species: !specie.data.evolves_from_species
-              ? false
-              : true,
+            evolves_from_species,
+            types: data.types,
+            species: data.species,
           };
         })
       ).then(result => {
@@ -70,8 +84,13 @@ export default function Home() {
 
   useEffect(() => {
     console.log('pokemonsData', pokemonsData);
-    if (pokemonsData && pokemonsData.length > 0)
-      setPokemonsShow(Paginator(pokemonsData, 1, 20));
+    if (pokemonsData && pokemonsData.length > 0) {
+      const newPokemonsData = pokemonsData.filter(
+        pokemon => !pokemon.evolves_from_species
+      );
+
+      setPokemonsShow(Paginator(newPokemonsData, 1, 20));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemonsData]);
 
@@ -89,13 +108,18 @@ export default function Home() {
           {pokemonsShow.data &&
             pokemonsShow.data.map(pokemon => {
               return (
-                <Card key={pokemon.id} className={`bg-${pokemon.color}`}>
-                  <Col>
+                <Card key={pokemon.id}>
+                  <Img src={pokemon.img} alt="pokemon" />
+                  <SubCard className={`bg-${pokemon.color}`}>
+                    <Id>#{pokemon.id}</Id>
                     <Name>{pokemon.name}</Name>
-                  </Col>
-                  <Col>
-                    <Img src={pokemon.img} alt="pokemon" />
-                  </Col>
+                    {pokemon.types.map(type => (
+                      <Info key={type.type.name}>{type.type.name}</Info>
+                    ))}
+                    <SubTitle>Specie</SubTitle>
+
+                    <Info>{pokemon.species.name}</Info>
+                  </SubCard>
                 </Card>
               );
             })}
