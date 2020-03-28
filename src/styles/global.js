@@ -7,6 +7,7 @@ export default createGlobalStyle`
     padding:0;
     outline:0;
     box-sizing: border-box;
+    letter-spacing:0.1px;
   }
 
   *:focus{
@@ -47,11 +48,29 @@ export default createGlobalStyle`
   .bg-purple{
     background:#9A6FFF;
   }
+  .bg-black{
+    background:#111;
+  }
+  .bg-pink{
+    background:#FC6CB4;
+  }
+  .bg-gray{
+    background:#d3d3d3;
+  }
   .bg-white{
     background:#fff;
-    h2 {
+    color:#ccc;
+    * {
       color:#ccc !important;
     }
+  }
+  .bg-all{
+    background:#999;
+    color:#fff;
+  }
+
+  b{
+    letter-spacing:0.5px;
   }
 
 `;
