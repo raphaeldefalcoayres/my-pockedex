@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import filter from 'lodash/filter';
 import omit from 'lodash/omit';
 import overEvery from 'lodash/overEvery';
+import LazyLoad from 'react-lazyload';
 import {
   Container,
   Card,
@@ -25,234 +26,133 @@ import {
   BasicInfo,
   Habitats,
   Habitat,
+  ButtonTop,
 } from './styles';
 import api from '~/services/api';
-import { getItemsList, pad, Paginator } from '~/utils';
-import { ContainerGlobal } from '~/styles/global';
+import { pad } from '~/utils';
 
 export default function Home() {
   const [page, setPage] = useState(1);
   const [pokemons, setPokemons] = useState([]);
-  const [pokemonsData, setPokemonsData] = useState([]);
-  const [pokemonsShow, setPokemonsShow] = useState([]);
   const [total, setTotal] = useState(0);
   const [type, setType] = useState('all');
   const [color, setColor] = useState('all');
   const [habitat, setHabitat] = useState('all');
   const [filters, setFilters] = useState({});
 
-  const [colors, setColors] = useState({
-    all: 0,
-    black: 0,
-    blue: 0,
-    brown: 0,
-    gray: 0,
-    green: 0,
-    pink: 0,
-    purple: 0,
-    red: 0,
-    white: 0,
-    yellow: 0,
-  });
+  const [colors, setColors] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [habitats, setHabitats] = useState([]);
 
-  const [types, setTypes] = useState({
-    all: 0,
-    normal: 0,
-    fighting: 0,
-    flying: 0,
-    poison: 0,
-    ground: 0,
-    rock: 0,
-    bug: 0,
-    ghost: 0,
-    steel: 0,
-    fire: 0,
-    water: 0,
-    grass: 0,
-    electric: 0,
-    psychic: 0,
-    ice: 0,
-    dragon: 0,
-    dark: 0,
-    fairy: 0,
-    unknown: 0,
-    shadow: 0,
-  });
-
-  const [habitats, setHabitats] = useState({
-    all: 0,
-    cave: 0,
-    forest: 0,
-    grassland: 0,
-    mountain: 0,
-    rare: 0,
-    'rough-terrain': 0,
-    sea: 0,
-    urban: 0,
-    'waters-edge': 0,
-    'without-habitat': 0,
-  });
-
-  async function evolutionArrayGenerate(evolution_chain) {
-    const evolution = [];
-
-    const { data } = await api(evolution_chain.chain.species.url);
-
-    evolution.push({
-      id: data.id,
-      name: data.name,
-      img: `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${pad(
-        data.id,
-        3
-      )}.png`,
-    });
-
-    if (evolution_chain.chain.evolves_to.length > 0) {
-      const { data: data2 } = await api(
-        evolution_chain.chain.evolves_to[0].species.url
-      );
-
-      evolution.push({
-        id: data2.id,
-        name: data2.name,
-        minLevel:
-          evolution_chain.chain.evolves_to[0].evolution_details[0].min_level,
-        img: `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${pad(
-          data2.id,
-          3
-        )}.png`,
-      });
-    }
-
-    if (
-      evolution_chain.chain.evolves_to.length > 0 &&
-      evolution_chain.chain.evolves_to[0].evolves_to.length > 0
-    ) {
-      const { data: data3 } = await api(
-        evolution_chain.chain.evolves_to[0].evolves_to[0].species.url
-      );
-
-      evolution.push({
-        id: data3.id,
-        name: data3.name,
-        minLevel:
-          evolution_chain.chain.evolves_to[0].evolves_to[0].evolution_details[0]
-            .min_level,
-        img: `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${pad(
-          data3.id,
-          3
-        )}.png`,
-      });
-    }
-
-    return evolution;
-  }
+  const [colorsDash, setColorsDash] = useState([]);
+  const [typesDash, setTypesDash] = useState([]);
+  const [habitatsDash, setHabitatsDash] = useState([]);
 
   async function loadPokemons() {
-    if (!localStorage.getItem('pokemons')) {
-      new Promise((resolve, reject) => {
-        getItemsList('pokemon?limit=20', [], resolve, reject);
-      }).then(response => {
-        setPokemons(response);
-        localStorage.setItem('pokemons', JSON.stringify(response));
-      });
-    }
-
-    setPokemons(JSON.parse(localStorage.getItem('pokemons')));
+    // const response = await api.get('pokemons?_page=1&_limit=20');
+    const response = await api.get('pokemons');
+    console.log(response.data);
+    setPokemons(response.data);
   }
 
-  async function loadPokemonData() {
-    if (!localStorage.getItem('pokemonsData')) {
-      const pokemonsData = await Promise.all(
-        pokemons.map(async pokemon => {
-          const { data } = await api(pokemon.url);
-          const specie = await api(data.species.url);
-          const evolution = await api(specie.data.evolution_chain.url);
-          const evolutionArray = await evolutionArrayGenerate(evolution.data);
+  async function loadColors() {
+    const response = await api.get('colors');
+    console.log(response.data);
+    setColors(response.data);
+  }
 
-          console.log(data, specie, evolution);
+  async function loadHabitats() {
+    const response = await api.get('habitats');
+    console.log(response.data);
+    setHabitats(response.data);
+  }
 
-          const evolves_from_species = !!specie.data.evolves_from_species;
-
-          return {
-            id: data.id,
-            name: pokemon.name,
-            img: `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${pad(
-              data.id,
-              3
-            )}.png`,
-            weight: data.weight,
-            height: data.height,
-            base_experience: data.base_experience,
-            color: specie.data.color ? specie.data.color.name : null,
-            evolves_from_species,
-            types: data.types,
-            species: data.species,
-            habitat: specie.data.habitat
-              ? specie.data.habitat.name
-              : 'without-habitat',
-            evolution: evolutionArray,
-          };
-        })
-      ).then(result => {
-        // return Paginator(result, 10);
-        return result;
-      });
-
-      localStorage.setItem('pokemonsData', JSON.stringify(pokemonsData));
-    }
-    setPokemonsData(JSON.parse(localStorage.getItem('pokemonsData')));
+  async function loadTypes() {
+    const response = await api.get('types');
+    console.log(response.data);
+    setTypes(response.data);
   }
 
   function handleScroll() {
     if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
-      const newPage = page + 1;
-      setPage(newPage);
-      console.log('aki');
+      setPage(page + 1);
     }
   }
 
   useEffect(() => {
     loadPokemons();
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
   }, []);
 
+  function filtered() {
+    const newPokemons = filter(
+      filter(
+        pokemons,
+        overEvery(Object.keys(filters).map(key => filters[key]))
+      ),
+      ['evolves_from_species', false]
+    );
+
+    setPokemons(newPokemons);
+  }
+
   useEffect(() => {
-    setPokemonsShow(Paginator(pokemonsData, page, 20));
+    const newPokemons = filter(
+      filter(
+        pokemons,
+        overEvery(Object.keys(filters).map(key => filters[key]))
+      ),
+      ['evolves_from_species', false]
+    );
+
+    setPokemons([...pokemons, ...newPokemons]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   useEffect(() => {
-    // console.log('pokemons', pokemons);
-    if (pokemons && pokemons.length > 0) loadPokemonData();
+    setTotal(pokemons.length);
+
+    const colorsArray = [];
+
+    if (pokemons && pokemons.length > 0) {
+      console.log('pokemons', pokemons);
+
+      const colorsArray = [];
+      const habitatsArray = [];
+      const typesArray = [];
+
+      pokemons.forEach(pokemon => {
+        if (!colorsArray[pokemon.color]) {
+          colorsArray[pokemon.color] = 1;
+        }
+        colorsArray[pokemon.color] += 1;
+
+        if (!habitatsArray[pokemon.habitat]) {
+          habitatsArray[pokemon.habitat] = 1;
+        }
+        habitatsArray[pokemon.habitat] += 1;
+
+        pokemon.types.forEach(i => {
+          if (!typesArray[i.type.name]) {
+            typesArray[i.type.name] = 1;
+          }
+          typesArray[i.type.name] += 1;
+        });
+      });
+
+      setColorsDash(colorsArray);
+      setHabitatsDash(habitatsArray);
+      setTypesDash(typesArray);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemons]);
 
   useEffect(() => {
-    // console.log('pokemonsData', pokemonsData);
-    setTotal(pokemonsData.length);
-    if (pokemonsData && pokemonsData.length > 0) {
-      const newPokemonsData = pokemonsData.filter(pokemon => {
-        setColors({ ...colors, [pokemon.color]: (colors[pokemon.color] += 1) });
-        setHabitats({
-          ...habitats,
-          [pokemon.habitat]: (habitats[pokemon.habitat] += 1),
-        });
-        pokemon.types.forEach(i => {
-          setTypes({ ...types, [i.type.name]: (types[i.type.name] += 1) });
-        });
-        return !pokemon.evolves_from_species;
-      });
+    console.log('colorsDash', colorsDash);
+  }, [colorsDash]);
 
-      setPokemonsShow(Paginator(newPokemonsData, 1, 20));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pokemonsData]);
-
-  useEffect(() => {
-    console.log('pokemonsShow', pokemonsShow);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pokemonsShow]);
+  function handleScrollTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   function handleFilterByColor(e) {
     const colorSelect = e.target.id;
@@ -306,24 +206,13 @@ export default function Home() {
   }
 
   useEffect(() => {
-    setPokemonsShow(
-      Paginator(
-        filter(
-          filter(
-            pokemonsData,
-            overEvery(Object.keys(filters).map(key => filters[key]))
-          ),
-          ['evolves_from_species', false]
-        ),
-        1,
-        20
-      )
-    );
+    filtered();
     console.log('filters', filters);
   }, [filters]); // eslint-disable-line
 
   return (
     <Container>
+      <ButtonTop onClick={() => handleScrollTop()}>⮝</ButtonTop>
       <Head>
         <Row>
           <h1>Pokedex ({total})</h1>
@@ -333,7 +222,7 @@ export default function Home() {
             <h5>Filter by color:</h5>
 
             <Colors>
-              {Object.keys(colors).map(key => (
+              {Object.keys(colorsDash).map(key => (
                 <Color
                   key={key}
                   id={key}
@@ -342,7 +231,7 @@ export default function Home() {
                   className={`bg-${key}`}
                   active={color === key}
                 >
-                  {key === 'all' ? 'all' : `${key} ${colors[key]}`}
+                  {key === 'all' ? 'all' : `${key} ${colorsDash[key]}`}
                 </Color>
               ))}
             </Colors>
@@ -351,7 +240,7 @@ export default function Home() {
             <h5>Filter by Habitat:</h5>
 
             <Habitats>
-              {Object.keys(habitats).map(key => (
+              {Object.keys(habitatsDash).map(key => (
                 <Habitat
                   key={key}
                   id={key}
@@ -359,7 +248,7 @@ export default function Home() {
                   title={key}
                   active={habitat === key}
                 >
-                  {key === 'all' ? 'all' : `${key} ${habitats[key]}`}
+                  {key === 'all' ? 'all' : `${key} ${habitatsDash[key]}`}
                 </Habitat>
               ))}
             </Habitats>
@@ -370,7 +259,7 @@ export default function Home() {
             <h5>Filter by type:</h5>
 
             <Types>
-              {Object.keys(types).map(key => (
+              {Object.keys(typesDash).map(key => (
                 <Type
                   key={key}
                   onClick={e => handleFilterByType(e)}
@@ -378,7 +267,9 @@ export default function Home() {
                   active={type === key}
                 >
                   <span title={key}>{key}</span>
-                  {key !== 'all' && <strong title={key}>{types[key]}</strong>}
+                  {key !== 'all' && (
+                    <strong title={key}>{typesDash[key]}</strong>
+                  )}
                 </Type>
               ))}
             </Types>
@@ -387,11 +278,14 @@ export default function Home() {
       </Head>
 
       <List>
-        {pokemonsShow.data &&
-          pokemonsShow.data.map(pokemon => {
+        {pokemons &&
+          pokemons.length > 0 &&
+          pokemons.map(pokemon => {
             return (
-              <Card key={pokemon.id}>
-                <Img src={pokemon.img} alt="pokemon" />
+              <Card key={pokemon.name}>
+                <LazyLoad>
+                  <Img src={pokemon.img} alt="pokemon" />
+                </LazyLoad>
                 <SubCard className={`bg-${pokemon.color}`}>
                   <Id>#{pad(pokemon.id, 3)}</Id>
                   <BoxTypes>
@@ -424,7 +318,9 @@ export default function Home() {
                         <Evolution key={e.id}>
                           <strong>#{pad(e.id, 3)}</strong>
                           <b>{e.name}</b>
-                          <img src={e.img} alt="evolution" />
+                          <LazyLoad once>
+                            <img src={e.img} alt="evolution" />
+                          </LazyLoad>
                           <span>{e.minLevel}</span>
                         </Evolution>
                       ))}

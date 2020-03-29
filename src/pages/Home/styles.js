@@ -292,3 +292,17 @@ export const Habitat = styled.button`
     padding: 5px 5px;
   }
 `;
+
+export const ButtonTop = styled.button`
+  border: none;
+  border-radius: 100%;
+  background: #999;
+  box-shadow: 2px 2px 10px -4px rgba(0, 0, 0, 0.5);
+  position: fixed;
+  right: 15px;
+  bottom: 15px;
+  z-index: 900;
+  color: #fff;
+  padding: 5px 8px;
+  cursor: pointer;
+`;
