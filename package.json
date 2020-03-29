@@ -1,5 +1,5 @@
 {
-  "name": "react-boilerplate",
+  "name": "my-pokedex",
   "version": "1.0.0",
   "scripts": {
     "start": "react-app-rewired start",
