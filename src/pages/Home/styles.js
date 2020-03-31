@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { lighten } from 'polished';
 
 export const Container = styled.div`
   padding: 15px 15px;
@@ -7,7 +6,7 @@ export const Container = styled.div`
     padding: 0;
   }
   h5 {
-    padding: 10px 0;
+    padding: 10px 0 5px 0;
   }
 `;
 export const List = styled.div`
@@ -85,7 +84,7 @@ export const Col = styled.div`
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-  flex: 1;
+  flex: 1 1 auto;
   padding-right: 10px;
 
   &:last-child {
@@ -206,6 +205,13 @@ export const Color = styled.button`
   box-shadow: 2px 2px 10px -4px rgba(0, 0, 0, 0.25);
   margin-right: 5px;
   margin-bottom: 5px;
+  flex: 1 1 auto;
+  justify-content: center;
+
+  &:first-child {
+    flex: 1 !important;
+  }
+
   cursor: pointer;
   border: none;
   ${props =>
@@ -255,22 +261,19 @@ export const Type = styled.button`
   }
 `;
 
-export const Habitats = styled.div`
+export const Select = styled.select`
   display: flex;
 
   @media screen and (max-width: 996px) {
     flex-wrap: wrap;
   }
 `;
-export const Habitat = styled.button`
+export const Option = styled.option`
   display: flex;
   align-items: center;
-  justify-content:center;
+  justify-content: center;
   border-radius: 5px;
   padding: 3px 5px;
-  color: #fff;
-  font-size: 12px;
-  box-shadow: 2px 2px 10px -4px rgba(0, 0, 0, 0.25);
   margin-right: 5px;
   cursor: pointer;
   border: none;
@@ -278,19 +281,6 @@ export const Habitat = styled.button`
   flex-direction: column;
   align-items: center;
   flex: 1 1 auto;
-  background:#bbb;
-  span {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  /* ${props => (props.active ? 'background:#999;' : 'background:#bbb;')} */
-  ${props =>
-    props.active &&
-    'box-shadow: inset 0 0 5px -1px rgba(0,0,0,0.5), 2px 2px 10px -4px rgba(0, 0, 0, 0.25);'}
-
-  @media screen and (max-width: 996px) {
-    padding: 5px 5px;
-  }
 `;
 
 export const ButtonTop = styled.button`

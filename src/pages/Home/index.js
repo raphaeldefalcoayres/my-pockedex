@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import filter from 'lodash/filter';
 import omit from 'lodash/omit';
-import overEvery from 'lodash/overEvery';
 import LazyLoad from 'react-lazyload';
 import {
   Container,
@@ -20,12 +18,10 @@ import {
   Evolution,
   Colors,
   Color,
-  Types,
-  Type,
+  Select,
+  Option,
   BoxTypes,
   BasicInfo,
-  Habitats,
-  Habitat,
   ButtonTop,
 } from './styles';
 import api from '~/services/api';
@@ -33,182 +29,147 @@ import { pad } from '~/utils';
 
 export default function Home() {
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const [pokemons, setPokemons] = useState([]);
   const [total, setTotal] = useState(0);
-  const [type, setType] = useState('all');
   const [color, setColor] = useState('all');
-  const [habitat, setHabitat] = useState('all');
+  const [type, setType] = useState('');
+  const [habitat, setHabitat] = useState('');
   const [filters, setFilters] = useState({});
 
   const [colors, setColors] = useState([]);
   const [types, setTypes] = useState([]);
   const [habitats, setHabitats] = useState([]);
 
-  const [colorsDash, setColorsDash] = useState([]);
-  const [typesDash, setTypesDash] = useState([]);
-  const [habitatsDash, setHabitatsDash] = useState([]);
-
   async function loadPokemons() {
-    // const response = await api.get('pokemons?_page=1&_limit=20');
-    const response = await api.get('pokemons');
-    console.log(response.data);
-    setPokemons(response.data);
+    const arrayFilters = Object.keys(filters);
+    let stringFilters = '';
+
+    if (arrayFilters.length > 0) {
+      arrayFilters.forEach(key => {
+        stringFilters += `&${key}=${filters[key]}`;
+      });
+    }
+
+    const url = `pokemons?_page=${page}&_limit=${perPage}${stringFilters}`;
+
+    const response = await api.get(url);
+    setTotal(response.headers['x-total-count']);
+    console.log('loadPokemons', response);
+
+    setPokemons([...pokemons, ...response.data]);
   }
 
   async function loadColors() {
     const response = await api.get('colors');
-    console.log(response.data);
+
     setColors(response.data);
   }
 
   async function loadHabitats() {
     const response = await api.get('habitats');
-    console.log(response.data);
+
     setHabitats(response.data);
   }
 
   async function loadTypes() {
     const response = await api.get('types');
-    console.log(response.data);
+
     setTypes(response.data);
   }
 
   function handleScroll() {
-    if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
-      setPage(page + 1);
+    if (
+      window.innerHeight + window.scrollY + 100 >=
+      document.body.scrollHeight
+    ) {
+      const newPage = page + 1;
+
+      const maxPage = Math.round(total / perPage);
+
+      if (page < maxPage) {
+        setPage(newPage);
+      }
     }
   }
 
   useEffect(() => {
+    loadColors();
+    loadHabitats();
+    loadTypes();
     loadPokemons();
   }, []);
 
-  function filtered() {
-    const newPokemons = filter(
-      filter(
-        pokemons,
-        overEvery(Object.keys(filters).map(key => filters[key]))
-      ),
-      ['evolves_from_species', false]
-    );
+  useEffect(() => {
+    if (pokemons.length === 0) {
+      loadPokemons();
+    }
 
-    setPokemons(newPokemons);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   useEffect(() => {
-    const newPokemons = filter(
-      filter(
-        pokemons,
-        overEvery(Object.keys(filters).map(key => filters[key]))
-      ),
-      ['evolves_from_species', false]
-    );
+    if (page > 1) {
+      loadPokemons();
+    }
 
-    setPokemons([...pokemons, ...newPokemons]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   useEffect(() => {
-    setTotal(pokemons.length);
+    window.addEventListener('scroll', handleScroll);
 
-    const colorsArray = [];
-
-    if (pokemons && pokemons.length > 0) {
-      console.log('pokemons', pokemons);
-
-      const colorsArray = [];
-      const habitatsArray = [];
-      const typesArray = [];
-
-      pokemons.forEach(pokemon => {
-        if (!colorsArray[pokemon.color]) {
-          colorsArray[pokemon.color] = 1;
-        }
-        colorsArray[pokemon.color] += 1;
-
-        if (!habitatsArray[pokemon.habitat]) {
-          habitatsArray[pokemon.habitat] = 1;
-        }
-        habitatsArray[pokemon.habitat] += 1;
-
-        pokemon.types.forEach(i => {
-          if (!typesArray[i.type.name]) {
-            typesArray[i.type.name] = 1;
-          }
-          typesArray[i.type.name] += 1;
-        });
-      });
-
-      setColorsDash(colorsArray);
-      setHabitatsDash(habitatsArray);
-      setTypesDash(typesArray);
-    }
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemons]);
-
-  useEffect(() => {
-    console.log('colorsDash', colorsDash);
-  }, [colorsDash]);
 
   function handleScrollTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function clearData() {
+    setPage(1);
+    setPokemons([]);
+  }
+
   function handleFilterByColor(e) {
     const colorSelect = e.target.id;
 
-    setColor(colorSelect);
-    setFilters(omit(filters, ['color']));
+    clearData();
 
-    if (colorSelect !== 'all') {
-      setFilters({
-        ...filters,
-        color: o => {
-          return o.color === colorSelect;
-        },
-      });
+    setColor(colorSelect);
+    setFilters(omit(filters, 'color'));
+    if (colorSelect !== '') {
+      setFilters({ ...filters, color: colorSelect });
     }
   }
 
   function handleFilterByType(e) {
-    const typeSelect = e.target.title;
+    const typeSelect = e.target.value;
+
+    clearData();
 
     setType(typeSelect);
     setFilters(omit(filters, ['type']));
-
-    if (typeSelect !== 'all') {
-      setFilters({
-        ...filters,
-        type: o => {
-          return (
-            o.types[0].type.name === typeSelect ||
-            (o.types[1] && o.types[1].type.name === typeSelect)
-          );
-        },
-      });
+    if (typeSelect !== '') {
+      setFilters({ ...filters, types_like: typeSelect });
     }
   }
 
   function handleFilterByHabitat(e) {
-    const habitatSelect = e.target.title;
+    const habitatSelect = e.target.value;
+
+    clearData();
 
     setHabitat(habitatSelect);
     setFilters(omit(filters, ['habitat']));
 
-    if (habitatSelect !== 'all') {
-      setFilters({
-        ...filters,
-        type: o => {
-          return o.habitat === habitatSelect;
-        },
-      });
+    if (habitatSelect !== '') {
+      setFilters({ ...filters, habitat: habitatSelect });
     }
   }
-
-  useEffect(() => {
-    filtered();
-    console.log('filters', filters);
-  }, [filters]); // eslint-disable-line
 
   return (
     <Container>
@@ -222,7 +183,14 @@ export default function Home() {
             <h5>Filter by color:</h5>
 
             <Colors>
-              {Object.keys(colorsDash).map(key => (
+              <Color
+                className="bg-all"
+                title="all"
+                onClick={e => handleFilterByColor(e)}
+              >
+                All
+              </Color>
+              {Object.keys(colors).map(key => (
                 <Color
                   key={key}
                   id={key}
@@ -231,7 +199,7 @@ export default function Home() {
                   className={`bg-${key}`}
                   active={color === key}
                 >
-                  {key === 'all' ? 'all' : `${key} ${colorsDash[key]}`}
+                  {key} ({colors[key]})
                 </Color>
               ))}
             </Colors>
@@ -239,40 +207,33 @@ export default function Home() {
           <Col>
             <h5>Filter by Habitat:</h5>
 
-            <Habitats>
-              {Object.keys(habitatsDash).map(key => (
-                <Habitat
+            <Select onChange={e => handleFilterByHabitat(e)}>
+              <Option value="">All habitat</Option>
+              {Object.keys(habitats).map(key => (
+                <Option
                   key={key}
                   id={key}
-                  onClick={e => handleFilterByHabitat(e)}
                   title={key}
                   active={habitat === key}
+                  value={key}
                 >
-                  {key === 'all' ? 'all' : `${key} ${habitatsDash[key]}`}
-                </Habitat>
+                  {key} {habitats[key]}
+                </Option>
               ))}
-            </Habitats>
+            </Select>
           </Col>
-        </Row>
-        <Row>
+
           <Col>
             <h5>Filter by type:</h5>
 
-            <Types>
-              {Object.keys(typesDash).map(key => (
-                <Type
-                  key={key}
-                  onClick={e => handleFilterByType(e)}
-                  title={key}
-                  active={type === key}
-                >
-                  <span title={key}>{key}</span>
-                  {key !== 'all' && (
-                    <strong title={key}>{typesDash[key]}</strong>
-                  )}
-                </Type>
+            <Select onChange={e => handleFilterByType(e)}>
+              <Option value="">All types</Option>
+              {Object.keys(types).map(key => (
+                <Option key={key} title={key} active={type === key} value={key}>
+                  {key} {types[key]}
+                </Option>
               ))}
-            </Types>
+            </Select>
           </Col>
         </Row>
       </Head>
@@ -282,15 +243,18 @@ export default function Home() {
           pokemons.length > 0 &&
           pokemons.map(pokemon => {
             return (
-              <Card key={pokemon.name}>
-                <LazyLoad>
-                  <Img src={pokemon.img} alt="pokemon" />
-                </LazyLoad>
+              <Card
+                key={`pokemon-${pokemon.name}`}
+                id={`pokemon-${pokemon.name}`}
+              >
+                {/* <LazyLoad> */}
+                <Img src={pokemon.img} alt="pokemon" />
+                {/* </LazyLoad> */}
                 <SubCard className={`bg-${pokemon.color}`}>
                   <Id>#{pad(pokemon.id, 3)}</Id>
                   <BoxTypes>
-                    {pokemon.types.map(t => (
-                      <Info key={t.type.name}>{t.type.name}</Info>
+                    {pokemon.types.split(',').map(t => (
+                      <Info key={t}>{t}</Info>
                     ))}
                   </BoxTypes>
                   <Name>{pokemon.name}</Name>
@@ -315,7 +279,10 @@ export default function Home() {
                   <Evolutions>
                     {pokemon.evolution &&
                       pokemon.evolution.map(e => (
-                        <Evolution key={e.id}>
+                        <Evolution
+                          key={`evolution-${e.id}`}
+                          id={`evolution-${e.id}`}
+                        >
                           <strong>#{pad(e.id, 3)}</strong>
                           <b>{e.name}</b>
                           <LazyLoad once>

@@ -73,6 +73,14 @@ export default createGlobalStyle`
     letter-spacing:0.5px;
   }
 
+  input,select,textarea{
+    border:1px solid #ddd;
+    border-radius:5px;
+    padding:5px 5px;
+    color:#222;
+    font-size:12px;
+  }
+
 `;
 
 export const ContainerGlobal = styled.div`
