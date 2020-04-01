@@ -158,7 +158,7 @@ export default function Home() {
     clearData();
 
     setType(typeSelect);
-    setFilters(omit(filters, ['type']));
+    setFilters(omit(filters, ['types_like']));
     if (typeSelect !== '') {
       setFilters({ ...filters, types_like: typeSelect });
     }
