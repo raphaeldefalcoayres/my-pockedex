@@ -250,6 +250,7 @@ export default function Home() {
         {pokemons &&
           pokemons.length > 0 &&
           pokemons.map(pokemon => {
+            let totalStats = 0;
             return (
               <Card
                 key={`pokemon-${pokemon.name}`}
@@ -265,14 +266,16 @@ export default function Home() {
                       <Info key={t}>{t}</Info>
                     ))}
                   </BoxTypes>
-                  <Name>{pokemon.name}</Name>
+                  <Name>
+                    <h2>{pokemon.name}</h2>
+                    {pokemon.habitat && (
+                      <BasicInfo>
+                        <b>Habitat:</b>
+                        {pokemon.habitat}
+                      </BasicInfo>
+                    )}
+                  </Name>
 
-                  {pokemon.habitat && (
-                    <BasicInfo>
-                      <b>Habitat:</b>
-                      {pokemon.habitat}
-                    </BasicInfo>
-                  )}
                   <BasicInfo>
                     <b>Weight:</b>
                     {pokemon.weight}
@@ -288,12 +291,23 @@ export default function Home() {
                         o.stat.name !== 'special-defense' &&
                         o.stat.name !== 'special-attack'
                     )
-                    .map(s => (
-                      <Stat key={s.stat.name}>
-                        <StatLabel>{s.stat.name}</StatLabel>
-                        <StatBar base_stat={s.base_stat} title={s.base_stat} />
-                      </Stat>
-                    ))}
+                    .map(s => {
+                      totalStats += s.base_stat;
+                      return (
+                        <Stat key={s.stat.name}>
+                          <StatLabel>{s.stat.name}</StatLabel>
+                          <StatBar
+                            base_stat={s.base_stat}
+                            title={s.base_stat}
+                          />
+                        </Stat>
+                      );
+                    })}
+
+                  <Stat>
+                    <StatLabel>Total</StatLabel>
+                    <StatBar base_stat={totalStats} title={totalStats} />
+                  </Stat>
 
                   {pokemon.evolution.length > 0 && (
                     <SubTitle>Evolution</SubTitle>

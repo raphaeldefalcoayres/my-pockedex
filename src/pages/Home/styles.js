@@ -55,12 +55,22 @@ export const BoxTypes = styled.div`
   align-items: flex-end;
 `;
 
-export const Name = styled.h2`
-  font-size: 20px;
-  font-weight: 500;
-  color: #fff;
+export const Name = styled.div`
   text-transform: capitalize;
   margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff;
+  }
+  div {
+    margin-left: 10px;
+    text-align: right;
+    margin-right: 0;
+    margin-top: 7px;
+  }
 `;
 
 export const Img = styled.img`
@@ -106,13 +116,13 @@ export const Id = styled.div`
 
 export const Info = styled.div`
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.25);
   font-size: 14px;
   color: #fff;
   padding: 2px 6px 3px 6px;
   display: inline-flex;
   margin-right: 10px;
-  margin-top: 5px;
+  margin-top: 3px;
 `;
 export const BasicInfo = styled.div`
   border-radius: 15px;
@@ -120,7 +130,7 @@ export const BasicInfo = styled.div`
   color: #fff;
   display: inline-flex;
   margin-right: 5px;
-  margin-top: 5px;
+  margin-top: 3px;
   align-items: center;
   b {
     font-weight: 600;
