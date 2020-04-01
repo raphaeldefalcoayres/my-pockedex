@@ -17,7 +17,7 @@ export const List = styled.div`
 `;
 export const Card = styled.div`
   width: 100%;
-  height: 380px;
+  height: 450px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -37,7 +37,7 @@ export const SubCard = styled.div`
   border-radius: 10px;
   box-shadow: 2px 2px 10px -4px rgba(0, 0, 0, 0.25);
   background: #f1f1f1;
-  /* min-height: 300px; */
+  min-height: 360px;
   padding: 15px;
   position: absolute;
   width: 100%;
@@ -116,14 +116,16 @@ export const Info = styled.div`
 `;
 export const BasicInfo = styled.div`
   border-radius: 15px;
-  font-size: 14px;
+  font-size: 12px;
   color: #fff;
   display: inline-flex;
-  margin-right: 10px;
-  margin-top: 10px;
+  margin-right: 5px;
+  margin-top: 5px;
+  align-items: center;
   b {
     font-weight: 600;
-    margin-right: 5px;
+    margin-right: 2px;
+    font-size: 10px;
   }
 `;
 
@@ -160,8 +162,16 @@ export const Evolution = styled.div`
   img {
     width: 76px;
   }
-  &::after {
+  /* &::after {
     content: '⮞';
+    color: #eee;
+    position: absolute;
+    right: -2.5px;
+    top: 50%;
+    z-index: 2;
+  } */
+
+  svg {
     color: #eee;
     position: absolute;
     right: -2.5px;
@@ -184,8 +194,14 @@ export const Evolution = styled.div`
     padding-right: 0;
   }
 
-  &:last-child::after {
-    content: '';
+  &:last-child svg {
+    display: none;
+  }
+
+  @media screen and (max-width: 996px) {
+    img {
+      width: 95px;
+    }
   }
 `;
 
@@ -293,6 +309,42 @@ export const ButtonTop = styled.button`
   bottom: 15px;
   z-index: 900;
   color: #fff;
-  padding: 5px 8px;
+  padding: 5px 7px;
   cursor: pointer;
+`;
+
+export const Stat = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: 5px;
+`;
+export const StatLabel = styled.div`
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 2px;
+  text-transform: capitalize;
+`;
+export const StatBar = styled.div`
+  width: 100%;
+  height: 4px;
+  background: #ccc;
+  border-radius: 5px;
+  position: relative;
+  &::before {
+    content: ' ';
+    background: #999;
+    height: 4px;
+    width: ${props => (props.base_stat ? (props.base_stat * 100) / 500 : 0)}%;
+    position: absolute;
+    border-radius: 5px;
+  }
+  &::after {
+    content: ' ${props => props.title}/500';
+    position: absolute;
+    right: 0;
+    top: -15px;
+    color: #fff;
+    font-size: 11px;
+  }
 `;

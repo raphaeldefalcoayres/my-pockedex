@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import omit from 'lodash/omit';
 import LazyLoad from 'react-lazyload';
+import { FaChevronUp } from 'react-icons/fa';
+import { FiChevronsRight } from 'react-icons/fi';
+
 import {
   Container,
   Card,
@@ -23,6 +26,9 @@ import {
   BoxTypes,
   BasicInfo,
   ButtonTop,
+  Stat,
+  StatLabel,
+  StatBar,
 } from './styles';
 import api from '~/services/api';
 import { pad } from '~/utils';
@@ -173,7 +179,9 @@ export default function Home() {
 
   return (
     <Container>
-      <ButtonTop onClick={() => handleScrollTop()}>⮝</ButtonTop>
+      <ButtonTop onClick={() => handleScrollTop()}>
+        <FaChevronUp />
+      </ButtonTop>
       <Head>
         <Row>
           <h1>Pokedex ({total})</h1>
@@ -260,21 +268,36 @@ export default function Home() {
                   <Name>{pokemon.name}</Name>
 
                   {pokemon.habitat && (
-                    <>
-                      <BasicInfo>
-                        <b>Habitat:</b> {pokemon.habitat}
-                      </BasicInfo>
-                      <br />
-                    </>
+                    <BasicInfo>
+                      <b>Habitat:</b>
+                      {pokemon.habitat}
+                    </BasicInfo>
                   )}
                   <BasicInfo>
-                    <b>Weight:</b> {pokemon.weight}
+                    <b>Weight:</b>
+                    {pokemon.weight}
                   </BasicInfo>
                   <BasicInfo>
-                    <b>Height:</b> {pokemon.height}
+                    <b>Height:</b>
+                    {pokemon.height}
                   </BasicInfo>
 
-                  <SubTitle>Evoluction</SubTitle>
+                  {pokemon.stats
+                    .filter(
+                      o =>
+                        o.stat.name !== 'special-defense' &&
+                        o.stat.name !== 'special-attack'
+                    )
+                    .map(s => (
+                      <Stat key={s.stat.name}>
+                        <StatLabel>{s.stat.name}</StatLabel>
+                        <StatBar base_stat={s.base_stat} title={s.base_stat} />
+                      </Stat>
+                    ))}
+
+                  {pokemon.evolution.length > 0 && (
+                    <SubTitle>Evolution</SubTitle>
+                  )}
 
                   <Evolutions>
                     {pokemon.evolution &&
@@ -285,6 +308,7 @@ export default function Home() {
                         >
                           <strong>#{pad(e.id, 3)}</strong>
                           <b>{e.name}</b>
+                          <FiChevronsRight />
                           <LazyLoad once>
                             <img src={e.img} alt="evolution" />
                           </LazyLoad>

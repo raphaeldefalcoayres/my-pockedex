@@ -62,6 +62,9 @@ export default createGlobalStyle`
     color:#ccc;
     * {
       color:#ccc !important;
+      ::after{
+        color:#ccc;
+      }
     }
   }
   .bg-all{
